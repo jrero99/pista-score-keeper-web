@@ -18,6 +18,9 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        winner: "bg-winner text-winner-foreground hover:bg-winner/90 shadow-[var(--shadow-button)]",
+        loser: "bg-loser text-loser-foreground hover:bg-loser/90 shadow-[var(--shadow-button)]",
+        court: "bg-court text-court-foreground hover:bg-court/90 shadow-[var(--shadow-button)]",
       },
       size: {
         default: "h-10 px-4 py-2",

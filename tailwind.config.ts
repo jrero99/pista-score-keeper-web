@@ -52,6 +52,18 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				winner: {
+					DEFAULT: 'hsl(var(--winner))',
+					foreground: 'hsl(var(--winner-foreground))'
+				},
+				loser: {
+					DEFAULT: 'hsl(var(--loser))',
+					foreground: 'hsl(var(--loser-foreground))'
+				},
+				court: {
+					DEFAULT: 'hsl(var(--court))',
+					foreground: 'hsl(var(--court-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
