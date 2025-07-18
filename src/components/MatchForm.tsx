@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Trophy, Users, MapPin, Save } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Trophy, Users, MapPin, Save } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface Team {
   id: string;
@@ -19,16 +19,19 @@ interface Match {
   timestamp: Date;
 }
 
+const courts = ["Pista 1", "Pista 2", "Pista 3"];
 
-const courts = ['Pista 1', 'Pista 2', 'Pista 3', 'Pista 4'];
-
-const calculateEloChange = (winnerElo: number, loserElo: number, kFactor: number = 32): [number, number] => {
+const calculateEloChange = (
+  winnerElo: number,
+  loserElo: number,
+  kFactor: number = 32
+): [number, number] => {
   const expectedWin = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
   const expectedLoss = 1 - expectedWin;
-  
+
   const newWinnerElo = Math.round(winnerElo + kFactor * (1 - expectedWin));
   const newLoserElo = Math.round(loserElo + kFactor * (0 - expectedLoss));
-  
+
   return [newWinnerElo, newLoserElo];
 };
 
@@ -40,30 +43,30 @@ interface MatchFormProps {
 export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
   const [selectedWinner, setSelectedWinner] = useState<Team | null>(null);
   const [selectedLoser, setSelectedLoser] = useState<Team | null>(null);
-  const [selectedCourt, setSelectedCourt] = useState<string>('');
+  const [selectedCourt, setSelectedCourt] = useState<string>("");
   const [matches, setMatches] = useState<Match[]>([]);
 
   // Control de tiempo para selección de equipos
   const isTeamSelectable = (teamId: string): boolean => {
-    const logs = JSON.parse(localStorage.getItem('padel-team-logs') || '{}');
+    const logs = JSON.parse(localStorage.getItem("padel-team-logs") || "{}");
     const lastSelected = logs[teamId];
     if (!lastSelected) return true;
-    
+
     const timeDiff = Date.now() - lastSelected;
     const fifteenMinutes = 15 * 60 * 1000;
     return timeDiff >= fifteenMinutes;
   };
 
   const logTeamSelection = (teamId: string) => {
-    const logs = JSON.parse(localStorage.getItem('padel-team-logs') || '{}');
+    const logs = JSON.parse(localStorage.getItem("padel-team-logs") || "{}");
     logs[teamId] = Date.now();
-    localStorage.setItem('padel-team-logs', JSON.stringify(logs));
+    localStorage.setItem("padel-team-logs", JSON.stringify(logs));
   };
 
   const resetForm = () => {
     setSelectedWinner(null);
     setSelectedLoser(null);
-    setSelectedCourt('');
+    setSelectedCourt("");
   };
 
   const handleSubmit = () => {
@@ -86,7 +89,10 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
     }
 
     // Calculate ELO changes
-    const [newWinnerElo, newLoserElo] = calculateEloChange(selectedWinner.elo, selectedLoser.elo);
+    const [newWinnerElo, newLoserElo] = calculateEloChange(
+      selectedWinner.elo,
+      selectedLoser.elo
+    );
     const eloChange = newWinnerElo - selectedWinner.elo;
 
     // Log team selections
@@ -94,8 +100,8 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
     logTeamSelection(selectedLoser.id);
 
     // Update teams with new ELO
-    setTeams(prevTeams => 
-      prevTeams.map(team => {
+    setTeams((prevTeams) =>
+      prevTeams.map((team) => {
         if (team.id === selectedWinner.id) {
           return { ...team, elo: newWinnerElo };
         }
@@ -113,21 +119,23 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
       timestamp: new Date(),
     };
 
-    setMatches(prev => [newMatch, ...prev]);
+    setMatches((prev) => [newMatch, ...prev]);
     resetForm();
-    
+
     toast({
       title: "¡Partido registrado!",
-      description: `${selectedWinner.name} venció a ${selectedLoser.name} en ${selectedCourt}. ELO: ${eloChange > 0 ? '+' : ''}${eloChange}`,
+      description: `${selectedWinner.name} venció a ${
+        selectedLoser.name
+      } en ${selectedCourt}. ELO: ${eloChange > 0 ? "+" : ""}${eloChange}`,
     });
   };
 
-  const availableTeams = teams.filter(team => 
-    !selectedWinner || team.id !== selectedWinner.id
+  const availableTeams = teams.filter(
+    (team) => !selectedWinner || team.id !== selectedWinner.id
   );
 
-  const availableLoserTeams = teams.filter(team => 
-    !selectedLoser || team.id !== selectedLoser.id
+  const availableLoserTeams = teams.filter(
+    (team) => !selectedLoser || team.id !== selectedLoser.id
   );
 
   return (
@@ -147,7 +155,9 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
               return (
                 <Button
                   key={team.id}
-                  variant={selectedWinner?.id === team.id ? "winner" : "outline"}
+                  variant={
+                    selectedWinner?.id === team.id ? "winner" : "outline"
+                  }
                   onClick={() => canSelect && setSelectedWinner(team)}
                   className="justify-start h-auto p-3"
                   disabled={selectedLoser?.id === team.id || !canSelect}
@@ -155,7 +165,7 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
                   <div className="text-left">
                     <div className="font-semibold">{team.name}</div>
                     <div className="text-xs opacity-80">
-                      {team.players.join(' & ')}
+                      {team.players.join(" & ")}
                       {!canSelect && (
                         <span className="text-red-500 ml-2">
                           (Bloqueado 15min)
@@ -193,7 +203,7 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
                   <div className="text-left">
                     <div className="font-semibold">{team.name}</div>
                     <div className="text-xs opacity-80">
-                      {team.players.join(' & ')}
+                      {team.players.join(" & ")}
                       {!canSelect && (
                         <span className="text-red-500 ml-2">
                           (Bloqueado 15min)
