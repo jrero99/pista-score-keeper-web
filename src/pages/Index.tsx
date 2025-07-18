@@ -1,7 +1,27 @@
+import React, { useState } from 'react';
 import { MatchForm } from '@/components/MatchForm';
+import { EloRanking } from '@/components/EloRanking';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import heroImage from '@/assets/padel-hero.jpg';
 
+interface Team {
+  id: string;
+  name: string;
+  players: [string, string];
+  elo: number;
+}
+
+const initialTeams: Team[] = [
+  { id: '1', name: 'Ruben & Aran', players: ['Ruben', 'Aran'], elo: 1000 },
+  { id: '2', name: 'Marches & Javi', players: ['Marches', 'Javi'], elo: 1000 },
+  { id: '3', name: 'Arturo & Pablo', players: ['Arturo', 'Pablo'], elo: 1000 },
+  { id: '4', name: 'Ruben & Nelson', players: ['Ruben', 'Nelson'], elo: 1000 },
+  { id: '5', name: 'Marcos & Perma', players: ['Marcos', 'Perma'], elo: 1000 },
+];
+
 const Index = () => {
+  const [teams, setTeams] = useState<Team[]>(initialTeams);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -17,7 +37,7 @@ const Index = () => {
               Torneo de Pádel
             </h1>
             <p className="text-sm md:text-base opacity-90">
-              Registra los resultados de cada partido
+              Registra los resultados y sigue la clasificación
             </p>
           </div>
         </div>
@@ -25,7 +45,20 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6 max-w-md">
-        <MatchForm />
+        <Tabs defaultValue="matches" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="matches">Partidos</TabsTrigger>
+            <TabsTrigger value="ranking">Clasificación</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="matches" className="space-y-6">
+            <MatchForm teams={teams} setTeams={setTeams} />
+          </TabsContent>
+          
+          <TabsContent value="ranking" className="space-y-6">
+            <EloRanking teams={teams} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

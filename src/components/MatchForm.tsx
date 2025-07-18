@@ -9,6 +9,7 @@ interface Team {
   id: string;
   name: string;
   players: [string, string];
+  elo: number;
 }
 
 interface Match {
@@ -18,17 +19,32 @@ interface Match {
   timestamp: Date;
 }
 
-const teams: Team[] = [
-  { id: '1', name: 'Ruben & Aran', players: ['Ruben', 'Aran'] },
-  { id: '2', name: 'Marches & Javi', players: ['Marches', 'Javi'] },
-  { id: '3', name: 'Arturo & Pablo', players: ['Arturo', 'Pablo'] },
-  { id: '4', name: 'Ruben & Nelson', players: ['Ruben', 'Nelson'] },
-  { id: '5', name: 'Marcos & Perma', players: ['Marcos', 'Perma'] },
+const initialTeams: Team[] = [
+  { id: '1', name: 'Ruben & Aran', players: ['Ruben', 'Aran'], elo: 1000 },
+  { id: '2', name: 'Marches & Javi', players: ['Marches', 'Javi'], elo: 1000 },
+  { id: '3', name: 'Arturo & Pablo', players: ['Arturo', 'Pablo'], elo: 1000 },
+  { id: '4', name: 'Ruben & Nelson', players: ['Ruben', 'Nelson'], elo: 1000 },
+  { id: '5', name: 'Marcos & Perma', players: ['Marcos', 'Perma'], elo: 1000 },
 ];
 
 const courts = ['Pista 1', 'Pista 2', 'Pista 3', 'Pista 4'];
 
-export const MatchForm = () => {
+const calculateEloChange = (winnerElo: number, loserElo: number, kFactor: number = 32): [number, number] => {
+  const expectedWin = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+  const expectedLoss = 1 - expectedWin;
+  
+  const newWinnerElo = Math.round(winnerElo + kFactor * (1 - expectedWin));
+  const newLoserElo = Math.round(loserElo + kFactor * (0 - expectedLoss));
+  
+  return [newWinnerElo, newLoserElo];
+};
+
+interface MatchFormProps {
+  teams: Team[];
+  setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
+}
+
+export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
   const [selectedWinner, setSelectedWinner] = useState<Team | null>(null);
   const [selectedLoser, setSelectedLoser] = useState<Team | null>(null);
   const [selectedCourt, setSelectedCourt] = useState<string>('');
@@ -59,6 +75,23 @@ export const MatchForm = () => {
       return;
     }
 
+    // Calculate ELO changes
+    const [newWinnerElo, newLoserElo] = calculateEloChange(selectedWinner.elo, selectedLoser.elo);
+    const eloChange = newWinnerElo - selectedWinner.elo;
+
+    // Update teams with new ELO
+    setTeams(prevTeams => 
+      prevTeams.map(team => {
+        if (team.id === selectedWinner.id) {
+          return { ...team, elo: newWinnerElo };
+        }
+        if (team.id === selectedLoser.id) {
+          return { ...team, elo: newLoserElo };
+        }
+        return team;
+      })
+    );
+
     const newMatch: Match = {
       winner: selectedWinner,
       loser: selectedLoser,
@@ -71,7 +104,7 @@ export const MatchForm = () => {
     
     toast({
       title: "¡Partido registrado!",
-      description: `${selectedWinner.name} venció a ${selectedLoser.name} en ${selectedCourt}`,
+      description: `${selectedWinner.name} venció a ${selectedLoser.name} en ${selectedCourt}. ELO: ${eloChange > 0 ? '+' : ''}${eloChange}`,
     });
   };
 
