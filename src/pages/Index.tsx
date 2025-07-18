@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MatchForm } from '@/components/MatchForm';
 import { EloRanking } from '@/components/EloRanking';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import heroImage from '@/assets/padel-hero.jpg';
 
 interface Team {
@@ -17,10 +19,24 @@ const initialTeams: Team[] = [
   { id: '3', name: 'Arturo & Pablo', players: ['Arturo', 'Pablo'], elo: 1000 },
   { id: '4', name: 'Ruben & Nelson', players: ['Ruben', 'Nelson'], elo: 1000 },
   { id: '5', name: 'Marcos & Perma', players: ['Marcos', 'Perma'], elo: 1000 },
+  { id: '6', name: 'F & ?', players: ['F', '?'], elo: 1000 },
 ];
 
 const Index = () => {
-  const [teams, setTeams] = useState<Team[]>(initialTeams);
+  const [teams, setTeams] = useState<Team[]>(() => {
+    const saved = localStorage.getItem('padel-teams');
+    return saved ? JSON.parse(saved) : initialTeams;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('padel-teams', JSON.stringify(teams));
+  }, [teams]);
+
+  const resetTournament = () => {
+    setTeams(initialTeams);
+    localStorage.removeItem('padel-teams');
+    localStorage.removeItem('padel-team-logs');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,7 +72,17 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="ranking" className="space-y-6">
-            <EloRanking teams={teams} />
+            <div className="space-y-4">
+              <Button
+                onClick={resetTournament}
+                variant="destructive"
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Empezar de Nuevo
+              </Button>
+              <EloRanking teams={teams} />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

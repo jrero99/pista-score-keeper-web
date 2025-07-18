@@ -84,7 +84,7 @@ export const EloRanking = ({ teams }: EloRankingProps) => {
                   )}
                   {position === total && (
                     <div className="text-xs text-red-500 mt-1">
-                      💪 ¡A por todas!
+                      😤 Inútiles
                     </div>
                   )}
                 </div>

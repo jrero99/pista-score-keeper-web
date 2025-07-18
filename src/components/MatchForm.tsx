@@ -19,13 +19,6 @@ interface Match {
   timestamp: Date;
 }
 
-const initialTeams: Team[] = [
-  { id: '1', name: 'Ruben & Aran', players: ['Ruben', 'Aran'], elo: 1000 },
-  { id: '2', name: 'Marches & Javi', players: ['Marches', 'Javi'], elo: 1000 },
-  { id: '3', name: 'Arturo & Pablo', players: ['Arturo', 'Pablo'], elo: 1000 },
-  { id: '4', name: 'Ruben & Nelson', players: ['Ruben', 'Nelson'], elo: 1000 },
-  { id: '5', name: 'Marcos & Perma', players: ['Marcos', 'Perma'], elo: 1000 },
-];
 
 const courts = ['Pista 1', 'Pista 2', 'Pista 3', 'Pista 4'];
 
@@ -49,6 +42,23 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
   const [selectedLoser, setSelectedLoser] = useState<Team | null>(null);
   const [selectedCourt, setSelectedCourt] = useState<string>('');
   const [matches, setMatches] = useState<Match[]>([]);
+
+  // Control de tiempo para selección de equipos
+  const isTeamSelectable = (teamId: string): boolean => {
+    const logs = JSON.parse(localStorage.getItem('padel-team-logs') || '{}');
+    const lastSelected = logs[teamId];
+    if (!lastSelected) return true;
+    
+    const timeDiff = Date.now() - lastSelected;
+    const fifteenMinutes = 15 * 60 * 1000;
+    return timeDiff >= fifteenMinutes;
+  };
+
+  const logTeamSelection = (teamId: string) => {
+    const logs = JSON.parse(localStorage.getItem('padel-team-logs') || '{}');
+    logs[teamId] = Date.now();
+    localStorage.setItem('padel-team-logs', JSON.stringify(logs));
+  };
 
   const resetForm = () => {
     setSelectedWinner(null);
@@ -78,6 +88,10 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
     // Calculate ELO changes
     const [newWinnerElo, newLoserElo] = calculateEloChange(selectedWinner.elo, selectedLoser.elo);
     const eloChange = newWinnerElo - selectedWinner.elo;
+
+    // Log team selections
+    logTeamSelection(selectedWinner.id);
+    logTeamSelection(selectedLoser.id);
 
     // Update teams with new ELO
     setTeams(prevTeams => 
@@ -128,22 +142,30 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-2">
-            {teams.map((team) => (
-              <Button
-                key={team.id}
-                variant={selectedWinner?.id === team.id ? "winner" : "outline"}
-                onClick={() => setSelectedWinner(team)}
-                className="justify-start h-auto p-3"
-                disabled={selectedLoser?.id === team.id}
-              >
-                <div className="text-left">
-                  <div className="font-semibold">{team.name}</div>
-                  <div className="text-xs opacity-80">
-                    {team.players.join(' & ')}
+            {teams.map((team) => {
+              const canSelect = isTeamSelectable(team.id);
+              return (
+                <Button
+                  key={team.id}
+                  variant={selectedWinner?.id === team.id ? "winner" : "outline"}
+                  onClick={() => canSelect && setSelectedWinner(team)}
+                  className="justify-start h-auto p-3"
+                  disabled={selectedLoser?.id === team.id || !canSelect}
+                >
+                  <div className="text-left">
+                    <div className="font-semibold">{team.name}</div>
+                    <div className="text-xs opacity-80">
+                      {team.players.join(' & ')}
+                      {!canSelect && (
+                        <span className="text-red-500 ml-2">
+                          (Bloqueado 15min)
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -158,22 +180,30 @@ export const MatchForm = ({ teams, setTeams }: MatchFormProps) => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-2">
-            {teams.map((team) => (
-              <Button
-                key={team.id}
-                variant={selectedLoser?.id === team.id ? "loser" : "outline"}
-                onClick={() => setSelectedLoser(team)}
-                className="justify-start h-auto p-3"
-                disabled={selectedWinner?.id === team.id}
-              >
-                <div className="text-left">
-                  <div className="font-semibold">{team.name}</div>
-                  <div className="text-xs opacity-80">
-                    {team.players.join(' & ')}
+            {teams.map((team) => {
+              const canSelect = isTeamSelectable(team.id);
+              return (
+                <Button
+                  key={team.id}
+                  variant={selectedLoser?.id === team.id ? "loser" : "outline"}
+                  onClick={() => canSelect && setSelectedLoser(team)}
+                  className="justify-start h-auto p-3"
+                  disabled={selectedWinner?.id === team.id || !canSelect}
+                >
+                  <div className="text-left">
+                    <div className="font-semibold">{team.name}</div>
+                    <div className="text-xs opacity-80">
+                      {team.players.join(' & ')}
+                      {!canSelect && (
+                        <span className="text-red-500 ml-2">
+                          (Bloqueado 15min)
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
